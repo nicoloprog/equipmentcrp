@@ -69,10 +69,6 @@ export default async function DashboardPage() {
         {/* Header */}
         <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-red-600 shadow-sm ring-1 ring-gray-200/80">
-              <Truck size={24} strokeWidth={1.8} />
-            </div>
-
             <div>
               <p className="mb-1 text-xs font-medium uppercase tracking-[0.12em] text-gray-500">
                 Accueil
@@ -91,10 +87,10 @@ export default async function DashboardPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold tracking-tight">
-                Vue d'ensemble
+                Vue d&apos;ensemble
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                Un aperçu de l'état actuel de votre flotte.
+                Un aperçu de l&apos;état actuel de votre flotte.
               </p>
             </div>
           </div>

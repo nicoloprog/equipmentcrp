@@ -1,7 +1,16 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Truck, Wrench, Shield, Home, Search, Plus, Menu } from "lucide-react";
+import {
+  Truck,
+  Wrench,
+  Shield,
+  Home,
+  Search,
+  Plus,
+  Menu,
+  Pointer,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Maintenance CRP",
@@ -42,16 +51,18 @@ export default function RootLayout({
               {/* Brand */}
               <Link
                 href="/"
-                className="flex w-auto shrink-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-red-500 md:w-[220px]"
-                aria-label="FleetMail home"
+                className="flex w-auto shrink-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-red-500 md:w-[280px]"
+                aria-label="CRP home"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white shadow-sm shadow-red-900/10">
-                  <Truck size={21} strokeWidth={1.9} />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-600 text-white shadow-sm shadow-red-900/10">
+                  <Wrench size={21} strokeWidth={1.9} />
                 </div>
 
                 <span className="hidden text-lg tracking-tight text-gray-600 sm:block">
-                  Fleet
-                  <span className="font-bold text-gray-900">Mail</span>
+                  Concept
+                  <span className="font-bold text-gray-900">
+                    RénovationPrestige
+                  </span>
                 </span>
               </Link>
 
@@ -97,7 +108,7 @@ export default function RootLayout({
                 href="/equipment/new"
                 className="mb-7 inline-flex h-12 items-center justify-center gap-3 self-start rounded-2xl bg-white px-5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-200/80 transition hover:bg-gray-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
               >
-                <Plus size={20} className="text-red-600" />
+                <Plus size={20} className="text-gray-400" />
                 Ajouter
               </Link>
 
