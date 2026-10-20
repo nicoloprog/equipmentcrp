@@ -21,7 +21,7 @@ export default function NewEquipmentPage() {
   const [tag, setTag] = useState(() => generateAssetTag("truck"));
   const [name, setName] = useState("");
   const [usageValue, setUsageValue] = useState("");
-  const [usageUnit, setUsageUnit] = useState<"heures" | "Kilomètres">("heures");
+  const [usageUnit, setUsageUnit] = useState<"hours" | "kilometers">("hours");
   const [warrantyExpiry, setWarrantyExpiry] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -160,12 +160,12 @@ export default function NewEquipmentPage() {
                 <select
                   value={usageUnit}
                   onChange={(e) =>
-                    setUsageUnit(e.target.value as "heures" | "Kilomètres")
+                    setUsageUnit(e.target.value as "hours" | "kilometers")
                   }
                   className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
                 >
-                  <option value="heures">Heures d'opération</option>
-                  <option value="Kilomètres">Kilomètres</option>
+                  <option value="hours">Heures d&apos;opération</option>
+                  <option value="kilometers">Kilomètres</option>
                 </select>
               </label>
             </div>
