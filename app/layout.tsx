@@ -8,7 +8,6 @@ import {
   EyeDashed,
   Home,
   Bell,
-  Search,
   Plus,
   QrCode,
   Flag,
@@ -82,31 +81,6 @@ export default function RootLayout({
                   </span>
                 </span>
               </Link>
-
-              {/* Search */}
-              <div className="flex min-w-0 flex-1 justify-center">
-                <form
-                  action="/equipment"
-                  method="GET"
-                  role="search"
-                  className="relative w-full max-w-2xl"
-                >
-                  <Search
-                    size={19}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
-                  />
-
-                  <input
-                    type="search"
-                    name="q"
-                    placeholder="Recherche..."
-                    aria-label="Rechercher un équipement, une maintenance ou un actif"
-                    className="h-11 w-full rounded-full border border-transparent bg-[#f1f3f4] pl-11 pr-4 text-sm text-gray-800 outline-none transition placeholder:text-gray-500 hover:bg-[#e9edf6] focus:border-gray-200 focus:bg-white focus:shadow-sm focus:ring-4 focus:ring-gray-100"
-                  />
-                </form>
-              </div>
-
-              {/* New equipment action */}
 
               <MobileQuickActions />
             </div>

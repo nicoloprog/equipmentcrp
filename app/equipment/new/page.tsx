@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Camera, Loader2, RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { EquipmentCategory } from "@/lib/supabase/types";
@@ -18,7 +17,6 @@ function generateAssetTag(category: EquipmentCategory) {
 }
 
 export default function NewEquipmentPage() {
-  const router = useRouter();
   const [category, setCategory] = useState<EquipmentCategory>("truck");
   const [tag, setTag] = useState(() => generateAssetTag("truck"));
   const [name, setName] = useState("");
@@ -26,13 +24,16 @@ export default function NewEquipmentPage() {
   const [usageUnit, setUsageUnit] = useState<"hours" | "kilometers">("hours");
   const [warrantyExpiry, setWarrantyExpiry] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoInputKey, setPhotoInputKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
     const supabase = createClient();
     const {
       data: { user },
@@ -65,8 +66,17 @@ export default function NewEquipmentPage() {
         category === "battery" && warrantyExpiry ? warrantyExpiry : null,
       photo_path: photoPath,
     });
-    if (insertError) setError(insertError.message);
-    else router.push("/equipment/all");
+    if (insertError) {
+      setError(insertError.message);
+    } else {
+      setSuccess("Équipement enregistré. Vous pouvez en ajouter un autre.");
+      setTag(generateAssetTag(category));
+      setName("");
+      setUsageValue("");
+      setWarrantyExpiry("");
+      setPhoto(null);
+      setPhotoInputKey((current) => current + 1);
+    }
     setLoading(false);
   }
 
@@ -177,6 +187,7 @@ export default function NewEquipmentPage() {
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-800">
             <Camera size={18} /> Upload photo
             <input
+              key={photoInputKey}
               type="file"
               accept="image/*"
               capture="environment"
@@ -194,6 +205,7 @@ export default function NewEquipmentPage() {
               {error}
             </p>
           )}
+          {success && <p className="text-sm text-green-700">{success}</p>}
           <button
             disabled={loading}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-2.5 font-medium text-white disabled:opacity-60"
