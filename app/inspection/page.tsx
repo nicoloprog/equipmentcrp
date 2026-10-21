@@ -16,7 +16,7 @@ const checks = [
   "Conduite générale",
   "Éclairage",
   "Pneus / roues",
-  "Niveaux huile / fuites",
+  "Niveau d'huile / fuites",
   "Esthétique",
   "Pare-brise",
   "Système d'échappement",
