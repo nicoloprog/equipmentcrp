@@ -15,7 +15,7 @@ type EquipmentOption = {
 const checks = [
   "Conduite générale",
   "Éclairage",
-  "Pneus / roues",
+  "Pneu / roues",
   "Niveau d'huile / fuites",
   "Esthétique",
   "Pare-brise",
