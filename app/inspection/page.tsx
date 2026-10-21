@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Loader2, QrCode, X } from "lucide-react";
+import { Check, Loader2, Search, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type EquipmentOption = {
@@ -25,7 +25,8 @@ const checks = [
 export default function QuickInspectionPage() {
   const [equipment, setEquipment] = useState<EquipmentOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
-  const [tag, setTag] = useState("");
+  const [equipmentSearch, setEquipmentSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [currentKm, setCurrentKm] = useState("");
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState("");
@@ -40,13 +41,6 @@ export default function QuickInspectionPage() {
       .order("tag")
       .then(({ data }) => setEquipment(data ?? []));
   }, []);
-
-  function selectByTag(value: string) {
-    const match = equipment.find(
-      (item) => item.tag.toLowerCase() === value.trim().toLowerCase(),
-    );
-    if (match) setSelectedId(match.id);
-  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,6 +112,13 @@ export default function QuickInspectionPage() {
   }
 
   const selectedEquipment = equipment.find((item) => item.id === selectedId);
+  const normalizedSearch = equipmentSearch.trim().toLowerCase();
+  const visibleEquipment = equipment.filter(
+    (item) =>
+      !normalizedSearch ||
+      item.tag.toLowerCase().includes(normalizedSearch) ||
+      item.name.toLowerCase().includes(normalizedSearch),
+  );
   return (
     <main className="min-h-screen bg-[#f8f9fa] p-6 md:p-10">
       <div className="mx-auto max-w-2xl">
@@ -154,27 +155,52 @@ export default function QuickInspectionPage() {
           ) : (
             <form onSubmit={submit} className="mt-6 space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="relative block text-sm font-medium text-gray-700 sm:col-span-2">
                   Choisir un équipement
-                  <select
-                    required
-                    value={selectedId}
-                    onChange={(e) => {
-                      setSelectedId(e.target.value);
-                      const item = equipment.find(
-                        (option) => option.id === e.target.value,
-                      );
-                      setCurrentKm(item?.current_km?.toString() ?? "");
-                    }}
-                    className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  >
-                    <option value="">Sélectionner...</option>
-                    {equipment.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.tag} — {item.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative mt-2">
+                    <Search
+                      size={17}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      required
+                      value={equipmentSearch}
+                      onFocus={() => setSearchOpen(true)}
+                      onChange={(e) => {
+                        setEquipmentSearch(e.target.value);
+                        setSelectedId("");
+                        setSearchOpen(true);
+                      }}
+                      onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+                      placeholder="Rechercher par tag ou nom..."
+                      className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3"
+                    />
+                  </div>
+                  {searchOpen && equipmentSearch.trim() && (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                      {visibleEquipment.length ? (
+                        visibleEquipment.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setSelectedId(item.id);
+                              setEquipmentSearch(`${item.tag} — ${item.name}`);
+                              setCurrentKm(item.current_km?.toString() ?? "");
+                              setSearchOpen(false);
+                            }}
+                            className="block w-full rounded-md px-3 py-2 text-left hover:bg-gray-50"
+                          >
+                            <span className="block font-medium text-gray-900">{item.tag}</span>
+                            <span className="block text-xs text-gray-500">{item.name}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2 text-sm text-gray-500">Aucun équipement trouvé.</p>
+                      )}
+                    </div>
+                  )}
                 </label>
               </div>
               {selectedEquipment &&

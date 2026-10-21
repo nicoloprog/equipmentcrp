@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CheckCircle, Clock, ExternalLink, Wrench } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { MaintenanceStatus } from "@/lib/maintenance/status";
-import type { MaintenancePlan } from "@/lib/supabase/types";
+import type { EquipmentAlert, MaintenancePlan } from "@/lib/supabase/types";
 
 type MaintenanceRow = MaintenancePlan & {
   assetTag: string;
@@ -15,6 +15,11 @@ type MaintenanceRow = MaintenancePlan & {
   status: MaintenanceStatus;
   dueDate: string | null;
   dueKm: number | null;
+};
+
+type UrgentAlertRow = EquipmentAlert & {
+  assetTag: string;
+  assetName: string;
 };
 
 const statusLabel: Record<MaintenanceStatus, string> = {
@@ -32,9 +37,17 @@ const statusStyle: Record<MaintenanceStatus, string> = {
 export default function MaintenanceQueue({
   plans,
   error,
+  title = "File de maintenance",
+  description = "Consultez les services planifiés pour chaque véhicule et outil.",
+  hideFilters = false,
+  urgentAlerts = [],
 }: {
   plans: MaintenanceRow[];
   error: string | null;
+  title?: string;
+  description?: string;
+  hideFilters?: boolean;
+  urgentAlerts?: UrgentAlertRow[];
 }) {
   const [rows, setRows] = useState(plans);
   const [filter, setFilter] = useState<"all" | "due_soon" | "overdue">("all");
@@ -44,7 +57,9 @@ export default function MaintenanceQueue({
 
   async function completePlan(plan: MaintenanceRow) {
     if (plan.currentKm == null) {
-      setUpdateError("Mettez à jour le kilométrage pendant une inspection avant de terminer cette maintenance.");
+      setUpdateError(
+        "Mettez à jour le kilométrage pendant une inspection avant de terminer cette maintenance.",
+      );
       return;
     }
 
@@ -128,11 +143,9 @@ export default function MaintenanceQueue({
       <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
         <header>
           <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            File de maintenance
+            {title}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Consultez les services planifiés pour chaque véhicule et outil.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">{description}</p>
         </header>
 
         {message && (
@@ -141,21 +154,47 @@ export default function MaintenanceQueue({
           </p>
         )}
 
-        <div className="flex gap-2 overflow-x-auto rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
-          {(["all", "due_soon", "overdue"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={`min-h-10 shrink-0 rounded-lg px-3 py-2 text-sm font-medium sm:px-4 ${filter === tab ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-            >
-              {tab === "all"
-                ? "Toutes les tâches"
-                : tab === "due_soon"
-                  ? "Bientôt dû"
-                  : "Prioritaire"}
-            </button>
-          ))}
-        </div>
+        {urgentAlerts.length > 0 && (
+          <section className="rounded-xl border border-red-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Anomalies urgentes</h2>
+              <p className="mt-1 text-sm text-gray-500">Problèmes ouverts marqués comme urgents.</p>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {urgentAlerts.map((alert) => (
+                <article key={alert.id} className="rounded-xl border border-red-100 bg-red-50/40 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="break-words font-semibold text-gray-900">{alert.title}</h3>
+                      <p className="mt-1 text-sm font-medium text-gray-600">{alert.assetTag} — {alert.assetName}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">Urgente</span>
+                  </div>
+                  <p className="mt-3 whitespace-pre-wrap break-words text-sm text-gray-600">{alert.description}</p>
+                  <Link href={`/vehicles/${alert.equipment_id}`} className="mt-3 inline-flex text-sm font-medium text-red-700 hover:text-red-900">Voir l&apos;équipement →</Link>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {!hideFilters && (
+          <div className="flex gap-2 overflow-x-auto rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+            {(["all", "due_soon", "overdue"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`min-h-10 shrink-0 rounded-lg px-3 py-2 text-sm font-medium sm:px-4 ${filter === tab ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              >
+                {tab === "all"
+                  ? "Toutes les tâches"
+                  : tab === "due_soon"
+                    ? "Bientôt dû"
+                    : "Prioritaire"}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           {filteredPlans.length ? (
@@ -164,21 +203,76 @@ export default function MaintenanceQueue({
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Équipement</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Service</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Progression</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Statut</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Équipement
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Service
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Progression
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Statut
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredPlans.map((plan) => (
                       <tr key={plan.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100"><Wrench className="h-4 w-4 text-blue-600" /></div><div><div className="font-semibold text-gray-900">{plan.assetTag}</div><div className="text-sm text-gray-500">{plan.assetName}</div></div></div></td>
-                        <td className="px-6 py-4"><p className="text-sm font-medium text-gray-900">{plan.title}</p><p className="mt-1 text-xs text-gray-500">{plan.dueKm != null ? `${plan.dueKm.toLocaleString("fr-CA")} km` : ""}{plan.dueKm != null && plan.dueDate ? " · " : ""}{plan.dueDate ?? ""}</p></td>
-                        <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="h-2 w-28 overflow-hidden rounded-full bg-gray-100"><div className={`h-full ${plan.status === "OVERDUE" ? "bg-red-500" : plan.status === "DUE_SOON" ? "bg-yellow-500" : "bg-green-500"}`} style={{ width: `${plan.progress}%` }} /></div><span className="text-xs text-gray-500">{Math.round(plan.progress)}%</span></div></td>
-                        <td className="px-6 py-4"><span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusStyle[plan.status]}`}>{statusLabel[plan.status]}</span></td>
-                        <td className="px-6 py-4"><ActionButtons plan={plan} /></td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
+                              <Wrench className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900">
+                                {plan.assetTag}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {plan.assetName}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-medium text-gray-900">
+                            {plan.title}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {plan.dueKm != null
+                              ? `${plan.dueKm.toLocaleString("fr-CA")} km`
+                              : ""}
+                            {plan.dueKm != null && plan.dueDate ? " · " : ""}
+                            {plan.dueDate ?? ""}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-100">
+                              <div
+                                className={`h-full ${plan.status === "OVERDUE" ? "bg-red-500" : plan.status === "DUE_SOON" ? "bg-yellow-500" : "bg-green-500"}`}
+                                style={{ width: `${plan.progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {Math.round(plan.progress)}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusStyle[plan.status]}`}
+                          >
+                            {statusLabel[plan.status]}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <ActionButtons plan={plan} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -187,21 +281,64 @@ export default function MaintenanceQueue({
 
               <div className="space-y-3 p-3 md:hidden">
                 {filteredPlans.map((plan) => (
-                  <article key={plan.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <article
+                    key={plan.id}
+                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                  >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><p className="truncate font-semibold text-gray-900">{plan.assetTag}</p><p className="truncate text-sm text-gray-500">{plan.assetName}</p></div>
-                      <span className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-medium ${statusStyle[plan.status]}`}>{statusLabel[plan.status]}</span>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-gray-900">
+                          {plan.assetTag}
+                        </p>
+                        <p className="truncate text-sm text-gray-500">
+                          {plan.assetName}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-medium ${statusStyle[plan.status]}`}
+                      >
+                        {statusLabel[plan.status]}
+                      </span>
                     </div>
-                    <h2 className="mt-4 break-words font-medium text-gray-900">{plan.title}</h2>
-                    <div className="mt-4 flex items-center gap-3"><div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-100"><div className={`h-full ${plan.status === "OVERDUE" ? "bg-red-500" : plan.status === "DUE_SOON" ? "bg-yellow-500" : "bg-green-500"}`} style={{ width: `${plan.progress}%` }} /></div><span className="shrink-0 text-xs text-gray-500">{Math.round(plan.progress)}%</span></div>
-                    <p className="mt-2 text-xs text-gray-500">{plan.dueKm != null ? `Prochaine échéance: ${plan.dueKm.toLocaleString("fr-CA")} km` : ""}{plan.dueKm != null && plan.dueDate ? " · " : ""}{plan.dueDate ?? ""}</p>
-                    <div className="mt-4"><ActionButtons plan={plan} /></div>
+                    <h2 className="mt-4 break-words font-medium text-gray-900">
+                      {plan.title}
+                    </h2>
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className={`h-full ${plan.status === "OVERDUE" ? "bg-red-500" : plan.status === "DUE_SOON" ? "bg-yellow-500" : "bg-green-500"}`}
+                          style={{ width: `${plan.progress}%` }}
+                        />
+                      </div>
+                      <span className="shrink-0 text-xs text-gray-500">
+                        {Math.round(plan.progress)}%
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                      {plan.dueKm != null
+                        ? `Prochaine échéance: ${plan.dueKm.toLocaleString("fr-CA")} km`
+                        : ""}
+                      {plan.dueKm != null && plan.dueDate ? " · " : ""}
+                      {plan.dueDate ?? ""}
+                    </p>
+                    <div className="mt-4">
+                      <ActionButtons plan={plan} />
+                    </div>
                   </article>
                 ))}
               </div>
             </>
           ) : (
-            <div className="p-10 text-center sm:p-12"><Clock className="mx-auto text-gray-300" size={36} /><h2 className="mt-3 font-semibold text-gray-900">Aucune maintenance planifiée</h2><p className="mt-1 text-sm text-gray-500">Ajoutez une règle dans la page de détails d&apos;un véhicule ou outil.</p></div>
+            <div className="p-10 text-center sm:p-12">
+              <Clock className="mx-auto text-gray-300" size={36} />
+              <h2 className="mt-3 font-semibold text-gray-900">
+                Aucune maintenance planifiée
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Ajoutez une règle dans la page de détails d&apos;un véhicule ou
+                outil.
+              </p>
+            </div>
           )}
         </div>
       </div>

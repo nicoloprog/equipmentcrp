@@ -16,17 +16,18 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const [equipmentResult, plansResult, alertsResult] = await Promise.all([
+  const [equipmentResult, plansResult, alertsResult, urgentAlertsResult] = await Promise.all([
     supabase.from("equipment").select("*"),
     supabase.from("maintenance_plans").select("*").eq("active", true),
     supabase.from("equipment_alerts").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabase.from("equipment_alerts").select("id", { count: "exact", head: true }).eq("status", "open").eq("severity", "high"),
   ]);
 
   const equipment = (equipmentResult.data ?? []) as Equipment[];
   const plans = (plansResult.data ?? []) as MaintenancePlan[];
   const equipmentById = new Map(equipment.map((item) => [item.id, item]));
   const now = new Date();
-  let priorityCount = 0;
+  let priorityCount = urgentAlertsResult.count ?? 0;
   let upcomingCount = 0;
 
   for (const plan of plans) {
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
   }
 
   const dataError =
-    equipmentResult.error ?? plansResult.error ?? alertsResult.error;
+    equipmentResult.error ?? plansResult.error ?? alertsResult.error ?? urgentAlertsResult.error;
   const stats = [
     {
       label: "Inventaire total",
@@ -54,7 +55,7 @@ export default async function DashboardPage() {
       description: "Maintenance en retard",
       icon: AlertTriangle,
       iconStyle: "bg-red-50 text-red-600",
-      href: "/maintenance",
+      href: "/maintenance/prioritaires",
     },
     {
       label: "Anomalies ouvertes",
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
       description: "Rapports d’inspection à traiter",
       icon: Flag,
       iconStyle: "bg-red-50 text-red-600",
-      href: "/equipment",
+      href: "/anomalies",
     },
     {
       label: "Entretien à venir",

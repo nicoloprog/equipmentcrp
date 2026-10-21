@@ -12,9 +12,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     supabase.from("equipment").select("*").eq("id", id).single(),
     supabase.from("maintenance_plans").select("*").eq("equipment_id", id).eq("active", true).order("created_at"),
     supabase.from("maintenance_logs").select("*").eq("equipment_id", id).order("completed_date", { ascending: false }),
-    supabase.from("equipment_alerts").select("*").eq("equipment_id", id).order("created_at", { ascending: false }),
+    supabase.from("equipment_alerts").select("*").eq("equipment_id", id).eq("status", "open").order("created_at", { ascending: false }),
   ]);
   if (vehicleError?.code === "PGRST116" || !vehicle) notFound();
   const error = vehicleError ?? plansError ?? logsError ?? alertsError;
-  return <VehicleMaintenanceDetail vehicle={vehicle as Equipment} plans={(plans ?? []) as MaintenancePlan[]} logs={(logs ?? []) as MaintenanceLog[]} alerts={(alerts ?? []) as EquipmentAlert[]} error={error?.message ?? null} renderedAt={new Date().toISOString()} />;
+  const vehicleData = vehicle as Equipment;
+  const { data: photo } = vehicleData.photo_path
+    ? await supabase.storage
+        .from("equipment-photos")
+        .createSignedUrl(vehicleData.photo_path, 3600)
+    : { data: null };
+  return <VehicleMaintenanceDetail vehicle={vehicleData} photoUrl={photo?.signedUrl ?? null} plans={(plans ?? []) as MaintenancePlan[]} logs={(logs ?? []) as MaintenanceLog[]} alerts={(alerts ?? []) as EquipmentAlert[]} error={error?.message ?? null} renderedAt={new Date().toISOString()} />;
 }
