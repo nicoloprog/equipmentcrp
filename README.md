@@ -5,7 +5,7 @@ This is a Next.js App Router equipment-maintenance app backed by Supabase and de
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste `supabase/migrations/20261020000000_initial_equipment.sql`, and run it. This creates the equipment table, RLS policies, and the private `equipment-photos` storage bucket.
+2. Open **SQL Editor**, run `supabase/migrations/20261020000000_initial_equipment.sql`, then run `supabase/migrations/20261021000000_maintenance_tasks.sql` and `supabase/migrations/20261021000001_inspections_and_alerts.sql`. These create the equipment, maintenance, inspection, and anomaly tables, RLS policies, and the private `equipment-photos` storage bucket.
 3. In **Project Settings → API**, copy the Project URL and publishable key.
 4. Copy `.env.example` to `.env.local` and fill in the two values.
 5. In **Authentication → Users**, create an email/password user. Unauthenticated visitors are redirected to `/login`.

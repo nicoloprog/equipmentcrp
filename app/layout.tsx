@@ -1,15 +1,17 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
+import MobileQuickActions from "@/app/components/MobileQuickActions";
 import {
   Truck,
   Wrench,
-  Shield,
+  EyeDashed,
   Home,
+  Bell,
   Search,
   Plus,
-  Menu,
-  Pointer,
+  QrCode,
+  Flag,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -36,6 +38,21 @@ const navigation = [
   },
 ];
 
+const quickActions = [
+  {
+    label: "Inspection rapide",
+    href: "/inspection",
+    icon: EyeDashed,
+    className: "bg-green-600 text-white hover:bg-green-700",
+  },
+  {
+    label: "Signaler une anomalie",
+    href: "/anomalie",
+    icon: Bell,
+    className: "bg-red-600 text-white hover:bg-red-700",
+  },
+];
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,7 +60,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#f8f9fa] font-sans antialiased text-[#202124]">
+      <body className="min-h-screen bg-[#f8f9fa] font-sans antialiased text-[#202124] pb-18">
         <div className="min-h-screen">
           {/* Top navigation */}
           <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/95 backdrop-blur-md">
@@ -90,13 +107,8 @@ export default function RootLayout({
               </div>
 
               {/* New equipment action */}
-              <Link
-                href="/equipment/new"
-                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:px-4"
-              >
-                <Plus size={18} className="text-red-600" />
-                <span className="hidden sm:inline">New equipment</span>
-              </Link>
+
+              <MobileQuickActions />
             </div>
           </header>
 
@@ -104,13 +116,22 @@ export default function RootLayout({
           <div className="mx-auto flex min-h-[calc(100vh-68px)] max-w-[1800px]">
             {/* Sidebar */}
             <aside className="sticky top-[68px] hidden h-[calc(100vh-68px)] w-[248px] shrink-0 flex-col border-r border-gray-200/80 bg-[#f8f9fa] p-4 md:flex">
-              <Link
-                href="/equipment/new"
-                className="mb-7 inline-flex h-12 items-center justify-center gap-3 self-start rounded-2xl bg-white px-5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-200/80 transition hover:bg-gray-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
-              >
-                <Plus size={20} className="text-gray-400" />
-                Ajouter
-              </Link>
+              <div className="mb-7 flex flex-col gap-2">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+
+                  return (
+                    <Link
+                      key={action.href}
+                      href={action.href}
+                      className={`inline-flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gray-200 ${action.className}`}
+                    >
+                      <Icon size={20} />
+                      <span>{action.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
 
               <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
                 Workspace
@@ -154,7 +175,7 @@ export default function RootLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-[10px] font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
                 >
                   <Icon size={20} strokeWidth={1.8} />
                   <span>{item.label}</span>
