@@ -7,6 +7,7 @@ export type Equipment = {
   category: EquipmentCategory;
   status: "healthy" | "due_soon" | "overdue" | "warranty_expiring";
   usage_value: number | null;
+  current_km: number | null;
   usage_unit: "hours" | "miles" | "kilometers" | null;
   warranty_expiry: string | null;
   photo_path: string | null;
@@ -45,6 +46,28 @@ export type EquipmentAlert = {
   created_at: string;
 };
 
+export type MaintenancePlan = {
+  id: string;
+  equipment_id: string;
+  title: string;
+  interval_km: number | null;
+  interval_months: number | null;
+  last_completed_km: number;
+  last_completed_date: string;
+  active: boolean;
+  created_at: string;
+};
+
+export type MaintenanceLog = {
+  id: string;
+  equipment_id: string;
+  maintenance_plan_id: string;
+  completed_km: number;
+  completed_date: string;
+  notes: string | null;
+  completed_by: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -56,6 +79,18 @@ export type Database = {
           status?: Equipment["status"];
         };
         Update: Partial<Equipment>;
+        Relationships: [];
+      };
+      maintenance_plans: {
+        Row: MaintenancePlan;
+        Insert: Omit<MaintenancePlan, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<MaintenancePlan>;
+        Relationships: [];
+      };
+      maintenance_logs: {
+        Row: MaintenanceLog;
+        Insert: Omit<MaintenanceLog, "id"> & { id?: string };
+        Update: Partial<MaintenanceLog>;
         Relationships: [];
       };
       maintenance_tasks: {
@@ -82,7 +117,18 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      complete_maintenance_plan: {
+        Args: {
+          p_plan_id: string;
+          p_equipment_id: string;
+          p_completed_km: number;
+          p_completed_by: string;
+          p_notes?: string | null;
+        };
+        Returns: string;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

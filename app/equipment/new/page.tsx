@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { EquipmentCategory } from "@/lib/supabase/types";
 
 function getTagPrefix(category: EquipmentCategory) {
-  return { truck: "VHL", drill: "OTL", battery: "BAT" }[category];
+  return { truck: "VHL", trailer: "REM", drill: "OTL", battery: "BAT" }[
+    category
+  ];
 }
 
 function generateAssetTag(category: EquipmentCategory) {
@@ -57,6 +59,7 @@ export default function NewEquipmentPage() {
       name,
       category,
       usage_value: usageValue ? Number(usageValue) : null,
+      current_km: category === "battery" || !usageValue ? null : Number(usageValue),
       usage_unit: category === "battery" ? null : usageUnit,
       warranty_expiry:
         category === "battery" && warrantyExpiry ? warrantyExpiry : null,
@@ -89,6 +92,7 @@ export default function NewEquipmentPage() {
               className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
             >
               <option value="truck">Véhicule</option>
+              <option value="trailer">Remorque</option>
               <option value="drill">Outil</option>
               <option value="battery">Batterie</option>
             </select>

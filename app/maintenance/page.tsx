@@ -1,22 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
+import { getMaintenanceProgress, getMaintenanceStatus, type MaintenanceStatus } from "@/lib/maintenance/status";
+import type { Equipment, MaintenancePlan } from "@/lib/supabase/types";
 import MaintenanceQueue from "./MaintenanceQueue";
-import type { MaintenanceTask } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function MaintenancePage() {
   const supabase = await createClient();
-  const [{ data: tasks, error: tasksError }, { data: equipment, error: equipmentError }] = await Promise.all([
-    supabase.from("maintenance_tasks").select("*").order("due_date", { ascending: true }),
-    supabase.from("equipment").select("id, tag, name"),
+  const [{ data: plans, error: plansError }, { data: equipment, error: equipmentError }] = await Promise.all([
+    supabase.from("maintenance_plans").select("*").eq("active", true).order("created_at", { ascending: false }),
+    supabase.from("equipment").select("*").order("tag"),
   ]);
-
-  const error = tasksError ?? equipmentError;
-  const equipmentById = new Map((equipment ?? []).map((item) => [item.id, item]));
-  const rows = (tasks ?? []).map((task: MaintenanceTask) => {
-    const asset = equipmentById.get(task.equipment_id);
-    return { ...task, assetTag: asset?.tag ?? "Équipement supprimé", assetName: asset?.name ?? "" };
+  const equipmentById = new Map(((equipment ?? []) as Equipment[]).map((item) => [item.id, item]));
+  const now = new Date();
+  const rows = ((plans ?? []) as MaintenancePlan[]).flatMap((plan) => {
+    const vehicle = equipmentById.get(plan.equipment_id);
+    if (!vehicle) return [];
+    const result = getMaintenanceStatus(plan, vehicle, now);
+    const progress = getMaintenanceProgress(plan, vehicle, now);
+    const status: MaintenanceStatus = progress >= 100 ? "OVERDUE" : progress >= 85 ? "DUE_SOON" : "OK";
+    return [{ ...plan, assetTag: vehicle.tag, assetName: vehicle.name, currentKm: vehicle.current_km, progress, status, dueDate: result.dueDate, dueKm: result.dueKm }];
   });
-
-  return <MaintenanceQueue tasks={rows} error={error?.message ?? null} />;
+  return <MaintenanceQueue plans={rows} error={(plansError ?? equipmentError)?.message ?? null} />;
 }

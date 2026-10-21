@@ -99,8 +99,8 @@ export default function RootLayout({
                   <input
                     type="search"
                     name="q"
-                    placeholder="Search equipment and maintenance..."
-                    aria-label="Search equipment and maintenance"
+                    placeholder="Recherche..."
+                    aria-label="Rechercher un équipement, une maintenance ou un actif"
                     className="h-11 w-full rounded-full border border-transparent bg-[#f1f3f4] pl-11 pr-4 text-sm text-gray-800 outline-none transition placeholder:text-gray-500 hover:bg-[#e9edf6] focus:border-gray-200 focus:bg-white focus:shadow-sm focus:ring-4 focus:ring-gray-100"
                   />
                 </form>

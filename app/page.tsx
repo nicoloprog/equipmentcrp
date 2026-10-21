@@ -9,29 +9,40 @@ import {
   Wrench,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getMaintenanceProgress } from "@/lib/maintenance/status";
+import type { Equipment, MaintenancePlan } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const [equipmentResult, overdueResult, dueSoonResult] = await Promise.all([
-    supabase.from("equipment").select("id", { count: "exact", head: true }),
-    supabase
-      .from("maintenance_tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "overdue"),
-    supabase
-      .from("maintenance_tasks")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["due_soon", "upcoming"]),
+  const [equipmentResult, plansResult, alertsResult] = await Promise.all([
+    supabase.from("equipment").select("*"),
+    supabase.from("maintenance_plans").select("*").eq("active", true),
+    supabase.from("equipment_alerts").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
 
+  const equipment = (equipmentResult.data ?? []) as Equipment[];
+  const plans = (plansResult.data ?? []) as MaintenancePlan[];
+  const equipmentById = new Map(equipment.map((item) => [item.id, item]));
+  const now = new Date();
+  let priorityCount = 0;
+  let upcomingCount = 0;
+
+  for (const plan of plans) {
+    const vehicle = equipmentById.get(plan.equipment_id);
+    if (!vehicle) continue;
+    const progress = getMaintenanceProgress(plan, vehicle, now);
+    if (progress >= 100) priorityCount += 1;
+    else if (progress >= 85) upcomingCount += 1;
+  }
+
   const dataError =
-    equipmentResult.error ?? overdueResult.error ?? dueSoonResult.error;
+    equipmentResult.error ?? plansResult.error ?? alertsResult.error;
   const stats = [
     {
       label: "Inventaire total",
-      value: equipmentResult.count ?? 0,
+      value: equipment.length,
       description: "Véhicules, outils et batteries",
       icon: Truck,
       iconStyle: "bg-gray-100 text-gray-600",
@@ -39,15 +50,23 @@ export default async function DashboardPage() {
     },
     {
       label: "Entretien prioritaire",
-      value: overdueResult.count ?? 0,
+      value: priorityCount,
       description: "Maintenance en retard",
       icon: AlertTriangle,
       iconStyle: "bg-red-50 text-red-600",
       href: "/maintenance",
     },
     {
+      label: "Anomalies ouvertes",
+      value: alertsResult.count ?? 0,
+      description: "Rapports d’inspection à traiter",
+      icon: Flag,
+      iconStyle: "bg-red-50 text-red-600",
+      href: "/equipment",
+    },
+    {
       label: "Entretien à venir",
-      value: dueSoonResult.count ?? 0,
+      value: upcomingCount,
       description: "Maintenance à planifier",
       icon: Wrench,
       iconStyle: "bg-amber-50 text-amber-700",
