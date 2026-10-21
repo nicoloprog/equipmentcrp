@@ -23,16 +23,17 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const isAuthenticated = Boolean(claimsData?.claims?.sub);
   const isPublicRoute = request.nextUrl.pathname === "/login";
 
-  if (!user && !isPublicRoute) {
+  if (!isAuthenticated && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicRoute) {
+  if (isAuthenticated && isPublicRoute) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
