@@ -37,7 +37,7 @@ const statusStyle: Record<MaintenanceStatus, string> = {
 export default function MaintenanceQueue({
   plans,
   error,
-  title = "File de maintenance",
+  title = "Fiche de maintenance",
   description = "Consultez les services planifiés pour chaque véhicule et outil.",
   hideFilters = false,
   urgentAlerts = [],
@@ -142,7 +142,7 @@ export default function MaintenanceQueue({
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
         <header>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {title}
           </h1>
           <p className="mt-1 text-sm text-gray-500">{description}</p>
@@ -157,10 +157,9 @@ export default function MaintenanceQueue({
         {urgentAlerts.length > 0 && (
           <section className="rounded-xl border border-red-200 bg-white p-4 shadow-sm sm:p-5">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Anomalies</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Problèmes ouverts marqués comme urgents.
-              </p>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Bris d'équipement
+              </h2>
             </div>
             <div className="grid gap-3 lg:grid-cols-2">
               {urgentAlerts.map((alert) => (
@@ -216,10 +215,7 @@ export default function MaintenanceQueue({
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900">Réparation</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Réparations marqués comme prioritaires.
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900">Maintenance</h2>
           </div>
           {filteredPlans.length ? (
             <>

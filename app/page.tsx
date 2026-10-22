@@ -16,12 +16,20 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const [equipmentResult, plansResult, alertsResult, urgentAlertsResult] = await Promise.all([
-    supabase.from("equipment").select("*"),
-    supabase.from("maintenance_plans").select("*").eq("active", true),
-    supabase.from("equipment_alerts").select("id", { count: "exact", head: true }).eq("status", "open"),
-    supabase.from("equipment_alerts").select("id", { count: "exact", head: true }).eq("status", "open").eq("severity", "high"),
-  ]);
+  const [equipmentResult, plansResult, alertsResult, urgentAlertsResult] =
+    await Promise.all([
+      supabase.from("equipment").select("*"),
+      supabase.from("maintenance_plans").select("*").eq("active", true),
+      supabase
+        .from("equipment_alerts")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open"),
+      supabase
+        .from("equipment_alerts")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open")
+        .eq("severity", "high"),
+    ]);
 
   const equipment = (equipmentResult.data ?? []) as Equipment[];
   const plans = (plansResult.data ?? []) as MaintenancePlan[];
@@ -39,7 +47,10 @@ export default async function DashboardPage() {
   }
 
   const dataError =
-    equipmentResult.error ?? plansResult.error ?? alertsResult.error ?? urgentAlertsResult.error;
+    equipmentResult.error ??
+    plansResult.error ??
+    alertsResult.error ??
+    urgentAlertsResult.error;
   const stats = [
     {
       label: "Inventaire total",
@@ -58,9 +69,9 @@ export default async function DashboardPage() {
       href: "/maintenance/prioritaires",
     },
     {
-      label: "Anomalies ouvertes",
+      label: "Bris d'équipement",
       value: alertsResult.count ?? 0,
-      description: "Rapports d’inspection à traiter",
+      description: "Rapports d’inspection disponible",
       icon: Flag,
       iconStyle: "bg-red-50 text-red-600",
       href: "/anomalies",

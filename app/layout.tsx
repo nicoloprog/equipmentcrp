@@ -1,7 +1,9 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import MobileQuickActions from "@/app/components/MobileQuickActions";
+import PwaRegister from "@/app/components/PwaRegister";
+import PwaInstallButton from "@/app/components/PwaInstallButton";
 import {
   Truck,
   Wrench,
@@ -17,6 +19,24 @@ export const metadata: Metadata = {
   title: "Maintenance CRP",
   description:
     "Suivi de l'entretien et de la maintenance des équipements pour le CRP.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Maintenance CRP",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.svg", type: "image/svg+xml" },
+      { url: "/icon-512.svg", type: "image/svg+xml" },
+    ],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4b5563",
+  width: "device-width",
+  initialScale: 1,
 };
 
 const navigation = [
@@ -60,6 +80,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#f8f9fa] font-sans antialiased text-[#202124] pb-18">
+        <PwaRegister />
         <div className="min-h-screen">
           {/* Top navigation */}
           <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/95 backdrop-blur-md">
@@ -82,7 +103,10 @@ export default function RootLayout({
                 </span>
               </Link>
 
-              <MobileQuickActions />
+              <div className="ml-auto flex items-center gap-2">
+                <PwaInstallButton />
+                <MobileQuickActions />
+              </div>
             </div>
           </header>
 

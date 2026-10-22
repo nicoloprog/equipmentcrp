@@ -13,7 +13,11 @@ export default async function EquipmentListPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-6">
-      {error && <p className="rounded-lg bg-red-50 p-4 text-sm text-red-700">Could not load equipment: {error.message}</p>}
+      {error && (
+        <p className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+          Could not load equipment: {error.message}
+        </p>
+      )}
       <EquipmentSearchList equipment={(data ?? []) as Equipment[]} />
     </div>
   );

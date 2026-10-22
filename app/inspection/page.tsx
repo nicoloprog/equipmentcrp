@@ -16,7 +16,14 @@ type EquipmentOption = {
 };
 
 function usesHours(item: Pick<EquipmentOption, "category" | "tag">) {
-  return item.category === "battery" || item.category === "drill" || item.category === "machinery" || item.tag.startsWith("BAT-") || item.tag.startsWith("OTL-") || item.tag.startsWith("MCH-");
+  return (
+    item.category === "battery" ||
+    item.category === "drill" ||
+    item.category === "machinery" ||
+    item.tag.startsWith("BAT-") ||
+    item.tag.startsWith("OTL-") ||
+    item.tag.startsWith("MCH-")
+  );
 }
 const vehicleChecks = [
   "Conduite générale",
@@ -31,10 +38,22 @@ const vehicleChecks = [
 function getInspectionChecks(equipment: EquipmentOption | undefined) {
   if (!equipment) return vehicleChecks;
   if (equipment.tag.startsWith("REM-")) {
-    return ["Éclairage", "Attelage", "Esthétique", "Freins", "Pneus / roues", "Espace de chargement"];
+    return [
+      "Éclairage",
+      "Attelage",
+      "Esthétique",
+      "Freins",
+      "Pneus / roues",
+      "Espace de chargement",
+    ];
   }
   if (equipment.tag.startsWith("MCH-")) {
-    return ["Éclairage", "Chenille / roulement", "Niveau d'huile / fuites", "Esthétique"];
+    return [
+      "Éclairage",
+      "Chenille / roulement",
+      "Niveau d'huile / fuites",
+      "Esthétique",
+    ];
   }
   if (equipment.tag.startsWith("BAT-") || equipment.tag.startsWith("OTL-")) {
     return ["Conduite générale"];
@@ -81,7 +100,11 @@ export default function QuickInspectionPage() {
       const hourBased = usesHours(selectedEquipment);
       const { error: kilometerError } = await supabase
         .from("equipment")
-        .update(hourBased ? { usage_value: Number(currentKm), usage_unit: "hours" } : { current_km: Number(currentKm), usage_unit: "kilometers" })
+        .update(
+          hourBased
+            ? { usage_value: Number(currentKm), usage_unit: "hours" }
+            : { current_km: Number(currentKm), usage_unit: "kilometers" },
+        )
         .eq("id", selectedId);
       if (kilometerError) {
         setMessage(kilometerError.message);
@@ -98,7 +121,9 @@ export default function QuickInspectionPage() {
     });
     if (error) setMessage(error.message);
     else if (failed) {
-      const failedChecks = inspectionChecks.filter((check) => results[check] === false);
+      const failedChecks = inspectionChecks.filter(
+        (check) => results[check] === false,
+      );
       const description = [
         `Points non conformes : ${failedChecks.join(", ")}.`,
         notes.trim() ? `Notes : ${notes.trim()}` : null,
@@ -149,9 +174,6 @@ export default function QuickInspectionPage() {
         </Link>
         <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-green-600">
-              Inspection terrain
-            </p>
             <h1 className="mt-1 text-2xl font-semibold text-gray-900">
               Inspection rapide
             </h1>
@@ -209,39 +231,52 @@ export default function QuickInspectionPage() {
                             onClick={() => {
                               setSelectedId(item.id);
                               setEquipmentSearch(`${item.tag} — ${item.name}`);
-                              setCurrentKm((usesHours(item) ? item.usage_value : item.current_km)?.toString() ?? "");
+                              setCurrentKm(
+                                (usesHours(item)
+                                  ? item.usage_value
+                                  : item.current_km
+                                )?.toString() ?? "",
+                              );
                               setResults({});
                               setSearchOpen(false);
                             }}
                             className="block w-full rounded-md px-3 py-2 text-left hover:bg-gray-50"
                           >
-                            <span className="block font-medium text-gray-900">{item.tag}</span>
-                            <span className="block text-xs text-gray-500">{item.name}</span>
+                            <span className="block font-medium text-gray-900">
+                              {item.tag}
+                            </span>
+                            <span className="block text-xs text-gray-500">
+                              {item.name}
+                            </span>
                           </button>
                         ))
                       ) : (
-                        <p className="px-3 py-2 text-sm text-gray-500">Aucun équipement trouvé.</p>
+                        <p className="px-3 py-2 text-sm text-gray-500">
+                          Aucun équipement trouvé.
+                        </p>
                       )}
                     </div>
                   )}
                 </label>
               </div>
               {selectedEquipment && (
-                  <label className="block rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-gray-800">
-                    {usesHours(selectedEquipment) ? "Heures d’opération" : "Kilométrage actuel (km)"}
-                    <input
-                      required
-                      type="number"
-                      min="0"
-                      value={currentKm}
-                      onChange={(e) => setCurrentKm(e.target.value)}
-                      className="mt-2 w-full rounded-lg border border-green-300 bg-white px-3 py-2"
-                    />
-                    <span className="mt-1 block text-xs font-normal text-gray-600">
-                      Cette valeur sera enregistrée avec l&apos;inspection.
-                    </span>
-                  </label>
-                )}
+                <label className="block rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-gray-800">
+                  {usesHours(selectedEquipment)
+                    ? "Heures d’opération"
+                    : "Kilométrage actuel (km)"}
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    value={currentKm}
+                    onChange={(e) => setCurrentKm(e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-green-300 bg-white px-3 py-2"
+                  />
+                  <span className="mt-1 block text-xs font-normal text-gray-600">
+                    Cette valeur sera enregistrée avec l&apos;inspection.
+                  </span>
+                </label>
+              )}
               <div className="space-y-3">
                 {inspectionChecks.map((check) => (
                   <div

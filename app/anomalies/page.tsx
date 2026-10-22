@@ -41,7 +41,7 @@ export default async function OpenAnomaliesPage() {
           <div className="flex items-start gap-4">
             <div>
               <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">
-                Anomalies ouvertes
+                Bris d'équipement
               </h1>
               <p className="mt-1 text-sm text-gray-500">
                 Consultez les problèmes signalés qui nécessitent une action.
