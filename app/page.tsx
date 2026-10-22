@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       description: "Maintenance à planifier",
       icon: Wrench,
       iconStyle: "bg-amber-50 text-amber-700",
-      href: "/maintenance",
+      href: "/maintenance/a-venir",
     },
   ];
 

@@ -70,7 +70,7 @@ export default function VehicleMaintenanceDetail({
   const [now] = useState(() => new Date(renderedAt));
   const router = useRouter();
   const isBattery = vehicle.category === "battery" || vehicle.tag.startsWith("BAT-");
-  const isHourBased = vehicle.category === "drill" || vehicle.tag.startsWith("OTL-");
+  const isHourBased = isBattery || vehicle.category === "drill" || vehicle.category === "machinery" || vehicle.tag.startsWith("OTL-") || vehicle.tag.startsWith("MCH-");
   const warrantyExpired = Boolean(
     isBattery &&
       vehicle.warranty_expiry &&
@@ -293,21 +293,18 @@ export default function VehicleMaintenanceDetail({
                   </div>
                 </div>
               )}
-              {!isBattery && <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3">
-                <Gauge className="text-gray-500" />
-                <div>
-                  <p className="text-xs text-gray-500">{isHourBased ? "Heures d’opération" : "Kilométrage actuel"}</p>
-                  <p className="font-mono text-xl font-semibold text-gray-900">
-                    {isHourBased
-                      ? vehicle.usage_value != null
-                        ? `${vehicle.usage_value.toLocaleString("fr-CA")} h`
-                        : "Non renseigné"
-                      : vehicle.current_km != null
-                        ? `${vehicle.current_km.toLocaleString("fr-CA")} km`
-                        : "Non renseigné"}
-                  </p>
+              {isHourBased && (
+                <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3">
+                  <Gauge className="text-gray-500" />
+                  <div><p className="text-xs text-gray-500">Heures d’opération</p><p className="font-mono text-xl font-semibold text-gray-900">{vehicle.usage_value != null ? `${vehicle.usage_value.toLocaleString("fr-CA")} h` : "Non renseigné"}</p></div>
                 </div>
-              </div>}
+              )}
+              {(!isHourBased || vehicle.current_km != null) && !isBattery && (
+                <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3">
+                  <Gauge className="text-gray-500" />
+                  <div><p className="text-xs text-gray-500">Kilométrage actuel</p><p className="font-mono text-xl font-semibold text-gray-900">{vehicle.current_km != null ? `${vehicle.current_km.toLocaleString("fr-CA")} km` : "Non renseigné"}</p></div>
+                </div>
+              )}
             </div>
           </div>
         </header>

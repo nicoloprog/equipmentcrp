@@ -6,14 +6,22 @@ import { createClient } from "@/lib/supabase/client";
 import type { EquipmentCategory } from "@/lib/supabase/types";
 
 function getTagPrefix(category: EquipmentCategory) {
-  return { truck: "VHL", trailer: "REM", drill: "OTL", battery: "BAT" }[
-    category
-  ];
+  return {
+    truck: "VHL",
+    trailer: "REM",
+    drill: "OTL",
+    battery: "BAT",
+    machinery: "MCH",
+  }[category];
 }
 
 function generateAssetTag(category: EquipmentCategory) {
   const randomNumber = Math.floor(100000 + Math.random() * 900000);
   return `${getTagPrefix(category)}-${randomNumber}`;
+}
+
+function isHourBasedCategory(category: EquipmentCategory) {
+  return category === "battery" || category === "drill" || category === "machinery";
 }
 
 export default function NewEquipmentPage() {
@@ -60,8 +68,9 @@ export default function NewEquipmentPage() {
       name,
       category,
       usage_value: usageValue ? Number(usageValue) : null,
-      current_km: category === "battery" || !usageValue ? null : Number(usageValue),
-      usage_unit: category === "battery" ? null : usageUnit,
+      current_km:
+        isHourBasedCategory(category) || !usageValue ? null : Number(usageValue),
+      usage_unit: isHourBasedCategory(category) ? "hours" : usageUnit,
       warranty_expiry:
         category === "battery" && warrantyExpiry ? warrantyExpiry : null,
       photo_path: photoPath,
@@ -103,6 +112,7 @@ export default function NewEquipmentPage() {
             >
               <option value="truck">Véhicule</option>
               <option value="trailer">Remorque</option>
+              <option value="machinery">Machinerie</option>
               <option value="drill">Outil</option>
               <option value="battery">Batterie</option>
             </select>
@@ -147,15 +157,20 @@ export default function NewEquipmentPage() {
             />
           </label>
           {category === "battery" ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Heures d&apos;opération
+                <input type="number" min="0" value={usageValue} onChange={(e) => setUsageValue(e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2" />
+              </label>
+              <label className="block text-sm font-medium text-gray-700">
+                Fin de la garantie
+                <input required type="date" value={warrantyExpiry} onChange={(e) => setWarrantyExpiry(e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2" />
+              </label>
+            </div>
+          ) : category === "drill" || category === "machinery" ? (
             <label className="block text-sm font-medium text-gray-700">
-              Fin de la garantie
-              <input
-                required
-                type="date"
-                value={warrantyExpiry}
-                onChange={(e) => setWarrantyExpiry(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
+              Heures d&apos;opération
+              <input type="number" min="0" value={usageValue} onChange={(e) => setUsageValue(e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2" />
             </label>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">

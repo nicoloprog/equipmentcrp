@@ -64,8 +64,10 @@ export default function NewEquipmentPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="truck">Vehicle / Transport Truck</option>
-                <option value="drill">Heavy Field Drill</option>
-                <option value="battery">Drill Battery / Consumable</option>
+                <option value="trailer">Remorque</option>
+                <option value="drill">Outil</option>
+                <option value="battery">Batterie</option>
+                <option value="machinery">Machinerie</option>
               </select>
             </div>
 

@@ -4,15 +4,21 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Loader2, Search, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import type { EquipmentCategory } from "@/lib/supabase/types";
 
 type EquipmentOption = {
   id: string;
   tag: string;
   name: string;
-  category: "truck" | "drill" | "battery";
+  category: EquipmentCategory;
   current_km: number | null;
+  usage_value: number | null;
 };
-const checks = [
+
+function usesHours(item: Pick<EquipmentOption, "category" | "tag">) {
+  return item.category === "battery" || item.category === "drill" || item.category === "machinery" || item.tag.startsWith("BAT-") || item.tag.startsWith("OTL-") || item.tag.startsWith("MCH-");
+}
+const vehicleChecks = [
   "Conduite générale",
   "Éclairage",
   "Pneu / roues",
@@ -21,6 +27,20 @@ const checks = [
   "Pare-brise",
   "Système d'échappement",
 ];
+
+function getInspectionChecks(equipment: EquipmentOption | undefined) {
+  if (!equipment) return vehicleChecks;
+  if (equipment.tag.startsWith("REM-")) {
+    return ["Éclairage", "Attelage", "Esthétique", "Freins", "Pneus / roues", "Espace de chargement"];
+  }
+  if (equipment.tag.startsWith("MCH-")) {
+    return ["Éclairage", "Chenille / roulement", "Niveau d'huile / fuites", "Esthétique"];
+  }
+  if (equipment.tag.startsWith("BAT-") || equipment.tag.startsWith("OTL-")) {
+    return ["Conduite générale"];
+  }
+  return vehicleChecks;
+}
 
 export default function QuickInspectionPage() {
   const [equipment, setEquipment] = useState<EquipmentOption[]>([]);
@@ -33,11 +53,13 @@ export default function QuickInspectionPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const supabase = createClient();
+  const selectedEquipment = equipment.find((item) => item.id === selectedId);
+  const inspectionChecks = getInspectionChecks(selectedEquipment);
 
   useEffect(() => {
     supabase
       .from("equipment")
-      .select("id, tag, name, category, current_km")
+      .select("id, tag, name, category, current_km, usage_value")
       .order("tag")
       .then(({ data }) => setEquipment(data ?? []));
   }, []);
@@ -49,16 +71,17 @@ export default function QuickInspectionPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const failed = checks.some((check) => results[check] === false);
+    const failed = inspectionChecks.some((check) => results[check] === false);
     if (!user || !selectedId) {
       setMessage("Sélectionnez un équipement avant de continuer.");
       setLoading(false);
       return;
     }
-    if (currentKm) {
+    if (currentKm && selectedEquipment) {
+      const hourBased = usesHours(selectedEquipment);
       const { error: kilometerError } = await supabase
         .from("equipment")
-        .update({ current_km: Number(currentKm) })
+        .update(hourBased ? { usage_value: Number(currentKm), usage_unit: "hours" } : { current_km: Number(currentKm), usage_unit: "kilometers" })
         .eq("id", selectedId);
       if (kilometerError) {
         setMessage(kilometerError.message);
@@ -75,7 +98,7 @@ export default function QuickInspectionPage() {
     });
     if (error) setMessage(error.message);
     else if (failed) {
-      const failedChecks = checks.filter((check) => results[check] === false);
+      const failedChecks = inspectionChecks.filter((check) => results[check] === false);
       const description = [
         `Points non conformes : ${failedChecks.join(", ")}.`,
         notes.trim() ? `Notes : ${notes.trim()}` : null,
@@ -111,7 +134,6 @@ export default function QuickInspectionPage() {
     setLoading(false);
   }
 
-  const selectedEquipment = equipment.find((item) => item.id === selectedId);
   const normalizedSearch = equipmentSearch.trim().toLowerCase();
   const visibleEquipment = equipment.filter(
     (item) =>
@@ -187,7 +209,8 @@ export default function QuickInspectionPage() {
                             onClick={() => {
                               setSelectedId(item.id);
                               setEquipmentSearch(`${item.tag} — ${item.name}`);
-                              setCurrentKm(item.current_km?.toString() ?? "");
+                              setCurrentKm((usesHours(item) ? item.usage_value : item.current_km)?.toString() ?? "");
+                              setResults({});
                               setSearchOpen(false);
                             }}
                             className="block w-full rounded-md px-3 py-2 text-left hover:bg-gray-50"
@@ -203,10 +226,9 @@ export default function QuickInspectionPage() {
                   )}
                 </label>
               </div>
-              {selectedEquipment &&
-                selectedEquipment.category !== "battery" && (
+              {selectedEquipment && (
                   <label className="block rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-gray-800">
-                    Kilométrage actuel (km)
+                    {usesHours(selectedEquipment) ? "Heures d’opération" : "Kilométrage actuel (km)"}
                     <input
                       required
                       type="number"
@@ -216,12 +238,12 @@ export default function QuickInspectionPage() {
                       className="mt-2 w-full rounded-lg border border-green-300 bg-white px-3 py-2"
                     />
                     <span className="mt-1 block text-xs font-normal text-gray-600">
-                      Ce kilométrage sera enregistré avec l&apos;inspection.
+                      Cette valeur sera enregistrée avec l&apos;inspection.
                     </span>
                   </label>
                 )}
               <div className="space-y-3">
-                {checks.map((check) => (
+                {inspectionChecks.map((check) => (
                   <div
                     key={check}
                     className="flex items-center justify-between rounded-xl border border-gray-200 p-4"

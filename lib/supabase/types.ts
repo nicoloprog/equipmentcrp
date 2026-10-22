@@ -1,4 +1,4 @@
-export type EquipmentCategory = "truck" | "drill" | "battery";
+export type EquipmentCategory = "truck" | "trailer" | "drill" | "battery" | "machinery";
 
 export type Equipment = {
   id: string;

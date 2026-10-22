@@ -8,21 +8,22 @@ export const dynamic = "force-dynamic";
 
 export default async function OpenAnomaliesPage() {
   const supabase = await createClient();
-  const [{ data: alerts, error: alertsError }, { data: equipment, error: equipmentError }] =
-    await Promise.all([
-      supabase
-        .from("equipment_alerts")
-        .select("*")
-        .eq("status", "open")
-        .order("created_at", { ascending: false }),
-      supabase.from("equipment").select("id, tag, name").order("tag"),
-    ]);
+  const [
+    { data: alerts, error: alertsError },
+    { data: equipment, error: equipmentError },
+  ] = await Promise.all([
+    supabase
+      .from("equipment_alerts")
+      .select("*")
+      .eq("status", "open")
+      .order("created_at", { ascending: false }),
+    supabase.from("equipment").select("id, tag, name").order("tag"),
+  ]);
 
   const equipmentById = new Map(
-    ((equipment ?? []) as Pick<Equipment, "id" | "tag" | "name">[]).map((item) => [
-      item.id,
-      item,
-    ]),
+    ((equipment ?? []) as Pick<Equipment, "id" | "tag" | "name">[]).map(
+      (item) => [item.id, item],
+    ),
   );
   const error = alertsError ?? equipmentError;
 
@@ -36,15 +37,9 @@ export default async function OpenAnomaliesPage() {
           <ArrowLeft size={16} /> Retour à l&apos;accueil
         </Link>
 
-        <header className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm sm:p-7">
+        <header className="rounded-2xl">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
-              <Flag size={23} />
-            </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600">
-                Suivi terrain
-              </p>
               <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">
                 Anomalies ouvertes
               </h1>

@@ -157,21 +157,39 @@ export default function MaintenanceQueue({
         {urgentAlerts.length > 0 && (
           <section className="rounded-xl border border-red-200 bg-white p-4 shadow-sm sm:p-5">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Anomalies urgentes</h2>
-              <p className="mt-1 text-sm text-gray-500">Problèmes ouverts marqués comme urgents.</p>
+              <h2 className="text-lg font-semibold text-gray-900">Anomalies</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Problèmes ouverts marqués comme urgents.
+              </p>
             </div>
             <div className="grid gap-3 lg:grid-cols-2">
               {urgentAlerts.map((alert) => (
-                <article key={alert.id} className="rounded-xl border border-red-100 bg-red-50/40 p-4">
+                <article
+                  key={alert.id}
+                  className="rounded-xl border border-red-100 bg-red-50/40 p-4"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="break-words font-semibold text-gray-900">{alert.title}</h3>
-                      <p className="mt-1 text-sm font-medium text-gray-600">{alert.assetTag} — {alert.assetName}</p>
+                      <h3 className="break-words font-semibold text-gray-900">
+                        {alert.title}
+                      </h3>
+                      <p className="mt-1 text-sm font-medium text-gray-600">
+                        {alert.assetTag} — {alert.assetName}
+                      </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">Urgente</span>
+                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                      Urgente
+                    </span>
                   </div>
-                  <p className="mt-3 whitespace-pre-wrap break-words text-sm text-gray-600">{alert.description}</p>
-                  <Link href={`/vehicles/${alert.equipment_id}`} className="mt-3 inline-flex text-sm font-medium text-red-700 hover:text-red-900">Voir l&apos;équipement →</Link>
+                  <p className="mt-3 whitespace-pre-wrap break-words text-sm text-gray-600">
+                    {alert.description}
+                  </p>
+                  <Link
+                    href={`/vehicles/${alert.equipment_id}`}
+                    className="mt-3 inline-flex text-sm font-medium text-red-700 hover:text-red-900"
+                  >
+                    Voir l&apos;équipement →
+                  </Link>
                 </article>
               ))}
             </div>
@@ -197,6 +215,12 @@ export default function MaintenanceQueue({
         )}
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900">Réparation</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Réparations marqués comme prioritaires.
+            </p>
+          </div>
           {filteredPlans.length ? (
             <>
               <div className="hidden overflow-x-auto md:block">
