@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon-192.svg", type: "image/svg+xml" },
-      { url: "/icon-512.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", type: "image/png" },
+      { url: "/icon-512.png", type: "image/png" },
     ],
   },
 };
@@ -91,9 +91,11 @@ export default function RootLayout({
                 className="flex w-auto shrink-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-red-500 md:w-[280px]"
                 aria-label="CRP home"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-600 text-white shadow-sm shadow-red-900/10">
-                  <Wrench size={21} strokeWidth={1.9} />
-                </div>
+                <img
+                  src="/brand-logo.jpg"
+                  alt="Maintenance CRP"
+                  className="h-10 w-10 rounded-xl object-cover shadow-sm"
+                />
 
                 <span className="hidden text-lg tracking-tight text-gray-600 sm:block">
                   Concept
