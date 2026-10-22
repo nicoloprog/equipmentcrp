@@ -6,6 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Maintenance CRP",
     description: "Suivi des équipements, inspections et maintenances du CRP.",
     start_url: "/",
+    id: "/",
+    scope: "/",
     display: "standalone",
     background_color: "#f8f9fa",
     theme_color: "#4b5563",
