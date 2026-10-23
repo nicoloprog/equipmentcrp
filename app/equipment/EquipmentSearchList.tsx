@@ -3,31 +3,65 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Plus, Search } from "lucide-react";
+import type { MaintenanceStatus } from "@/lib/maintenance/status";
 import type { Equipment } from "@/lib/supabase/types";
 
-function statusLabel(status: Equipment["status"]) {
-  return {
-    healthy: "OK",
-    due_soon: "Bientôt",
-    overdue: "Prioritaire",
-    warranty_expiring: "Alerte de garantie",
-  }[status];
-}
+type StatusFilter = "ALL" | MaintenanceStatus;
+
+const statusLabel: Record<MaintenanceStatus, string> = {
+  OK: "OK",
+  DUE_SOON: "Bientôt dû",
+  OVERDUE: "Prioritaire",
+};
+
+const statusDescription: Record<MaintenanceStatus, string> = {
+  OK: "Rien à maintenir",
+  DUE_SOON: "Entretien à venir",
+  OVERDUE: "Entretien prioritaire",
+};
+
+const statusStyles: Record<MaintenanceStatus, string> = {
+  OK: "border-green-200 bg-green-50 text-green-700",
+  DUE_SOON: "border-amber-200 bg-amber-50 text-amber-700",
+  OVERDUE: "border-red-200 bg-red-50 text-red-700",
+};
 
 export default function EquipmentSearchList({
   equipment,
+  statusByEquipmentId,
 }: {
   equipment: Equipment[];
+  statusByEquipmentId: Record<string, MaintenanceStatus>;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [tagFilter, setTagFilter] = useState("ALL");
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredEquipment = equipment.filter(
-    (item) =>
-      !normalizedQuery ||
-      item.tag.toLowerCase().includes(normalizedQuery) ||
-      item.name.toLowerCase().includes(normalizedQuery),
-  );
+  const tagPrefixes = Array.from(
+    new Set(
+      equipment
+        .map((item) => item.tag.split("-")[0]?.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  ).sort();
+  const getStatus = (item: Equipment): MaintenanceStatus =>
+    statusByEquipmentId[item.id] ?? "OK";
+  const filteredEquipment = equipment
+    .filter(
+      (item) =>
+        !normalizedQuery ||
+        item.tag.toLowerCase().includes(normalizedQuery) ||
+        item.name.toLowerCase().includes(normalizedQuery),
+    )
+    .filter(
+      (item) => statusFilter === "ALL" || getStatus(item) === statusFilter,
+    )
+    .filter(
+      (item) =>
+        tagFilter === "ALL" ||
+        item.tag.toUpperCase().startsWith(`${tagFilter}-`),
+    );
 
   return (
     <>
@@ -42,10 +76,52 @@ export default function EquipmentSearchList({
         </div>
         <Link
           href="/equipment/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-gray-300 px-2 py-2 text-sm font-medium text-white"
+          className="inline-flex items-center gap-2 rounded-lg border-blue-200 bg-blue-50 px-2 py-2 text-sm font-medium text-white"
         >
           <Plus size={17} /> Ajouter
         </Link>
+      </div>
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-2" aria-label="Filtrer par état">
+          <h2 className="text-sm font-semibold tracking-tight sm:text-sm">
+            Status :
+          </h2>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("ALL")}
+            className={`rounded-[15%] border px-1 py-1.5 text-xs cursor-pointer font-medium ${statusFilter === "ALL" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600"}`}
+          ></button>
+          {(Object.keys(statusLabel) as MaintenanceStatus[]).map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setStatusFilter(status)}
+              className={`rounded-[15%] border px-2 py-1.5 text-xs cursor-pointer font-medium ${statusFilter === status ? statusStyles[status] : "border-gray-200 bg-white text-gray-600"}`}
+            >
+              {statusLabel[status]}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2" aria-label="Filtrer par tag">
+          <h2 className="text-sm font-semibold tracking-tight sm:text-sm">
+            Tags :
+          </h2>
+          <button
+            type="button"
+            onClick={() => setTagFilter("ALL")}
+            className={`rounded-[15%] border px-1 py-1.5 text-xs cursor-pointer font-medium ${tagFilter === "ALL" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600"}`}
+          ></button>
+          {tagPrefixes.map((prefix) => (
+            <button
+              key={prefix}
+              type="button"
+              onClick={() => setTagFilter(prefix)}
+              className={`rounded-[15%] border px-2 py-1.5 text-xs cursor-pointer font-medium ${tagFilter === prefix ? "border-blue-200 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600"}`}
+            >
+              {prefix}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="relative">
         <Search
@@ -104,8 +180,11 @@ export default function EquipmentSearchList({
                 <p className="text-sm text-gray-600">{item.name}</p>
               </div>
               <div className="flex items-center gap-4 text-sm">
-                <span className="text-gray-500">
-                  {statusLabel(item.status)}
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusStyles[getStatus(item)]}`}
+                  title={statusDescription[getStatus(item)]}
+                >
+                  {statusLabel[getStatus(item)]}
                 </span>
                 <ArrowRight size={16} className="text-gray-400" />
               </div>

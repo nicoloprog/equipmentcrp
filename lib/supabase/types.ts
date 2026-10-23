@@ -128,6 +128,12 @@ export type Database = {
         };
         Returns: string;
       };
+      delete_equipment: {
+        Args: {
+          p_equipment_id: string;
+        };
+        Returns: string;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

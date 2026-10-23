@@ -37,7 +37,7 @@ const badgeStyles: Record<MaintenanceStatus, string> = {
 const badgeLabels: Record<MaintenanceStatus, string> = {
   OK: "OK",
   DUE_SOON: "Bientôt dû",
-  OVERDUE: "En retard",
+  OVERDUE: "Prioritaire",
 };
 
 export default function VehicleMaintenanceDetail({
@@ -69,12 +69,18 @@ export default function VehicleMaintenanceDetail({
   const [draft, setDraft] = useState<PlanDraft>(emptyDraft);
   const [now] = useState(() => new Date(renderedAt));
   const router = useRouter();
-  const isBattery = vehicle.category === "battery" || vehicle.tag.startsWith("BAT-");
-  const isHourBased = isBattery || vehicle.category === "drill" || vehicle.category === "machinery" || vehicle.tag.startsWith("OTL-") || vehicle.tag.startsWith("MCH-");
+  const isBattery =
+    vehicle.category === "battery" || vehicle.tag.startsWith("BAT-");
+  const isHourBased =
+    isBattery ||
+    vehicle.category === "drill" ||
+    vehicle.category === "machinery" ||
+    vehicle.tag.startsWith("OTL-") ||
+    vehicle.tag.startsWith("MCH-");
   const warrantyExpired = Boolean(
     isBattery &&
-      vehicle.warranty_expiry &&
-      vehicle.warranty_expiry < now.toISOString().slice(0, 10),
+    vehicle.warranty_expiry &&
+    vehicle.warranty_expiry < now.toISOString().slice(0, 10),
   );
   const supabase = createClient();
   const planStatuses = useMemo(
@@ -192,6 +198,52 @@ export default function VehicleMaintenanceDetail({
     setBusyId(null);
   }
 
+  async function deleteEquipment() {
+    if (
+      !window.confirm(
+        `Supprimer définitivement ${vehicle.tag} — ${vehicle.name} ? Cette action supprimera aussi ses inspections, anomalies et règles de maintenance.`,
+      )
+    ) {
+      return;
+    }
+
+    setBusyId("equipment-delete");
+    setMessage(null);
+    const { data: deletedId, error: deleteError } = await supabase.rpc(
+      "delete_equipment",
+      { p_equipment_id: vehicle.id },
+    );
+
+    if (deleteError) {
+      const migrationMissing =
+        /delete_equipment|function .* does not exist/i.test(
+          deleteError.message,
+        );
+      setMessage(
+        migrationMissing
+          ? "La base de données doit appliquer la migration de suppression d’équipement avant cette action."
+          : `Impossible de supprimer l’équipement : ${deleteError.message}`,
+      );
+      setBusyId(null);
+      return;
+    }
+
+    if (!deletedId) {
+      setMessage("L’équipement n’a pas pu être supprimé ou n’existe plus.");
+      setBusyId(null);
+      return;
+    }
+
+    if (vehicle.photo_path) {
+      await supabase.storage
+        .from("equipment-photos")
+        .remove([vehicle.photo_path]);
+    }
+
+    router.push("/equipment");
+    router.refresh();
+  }
+
   async function completePlan(plan: MaintenancePlan) {
     if (vehicle.current_km == null) {
       setMessage("Mettez d’abord à jour le kilométrage depuis une inspection.");
@@ -280,11 +332,22 @@ export default function VehicleMaintenanceDetail({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {(vehicle.category === "battery" || vehicle.tag.startsWith("BAT-")) && (
-                <div className={`flex items-center gap-3 rounded-xl px-4 py-3 ${warrantyExpired ? "bg-red-50" : "bg-green-50"}`}>
-                  <CalendarDays className={warrantyExpired ? "text-red-700" : "text-green-700"} />
+              {(vehicle.category === "battery" ||
+                vehicle.tag.startsWith("BAT-")) && (
+                <div
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 ${warrantyExpired ? "bg-red-50" : "bg-green-50"}`}
+                >
+                  <CalendarDays
+                    className={
+                      warrantyExpired ? "text-red-700" : "text-green-700"
+                    }
+                  />
                   <div>
-                    <p className={`text-xs ${warrantyExpired ? "text-red-700" : "text-green-700"}`}>Fin de la garantie</p>
+                    <p
+                      className={`text-xs ${warrantyExpired ? "text-red-700" : "text-green-700"}`}
+                    >
+                      Fin de la garantie
+                    </p>
                     <p className="font-semibold text-gray-900">
                       {vehicle.warranty_expiry
                         ? vehicle.warranty_expiry.split("-").reverse().join("/")
@@ -296,13 +359,27 @@ export default function VehicleMaintenanceDetail({
               {isHourBased && (
                 <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3">
                   <Gauge className="text-gray-500" />
-                  <div><p className="text-xs text-gray-500">Heures d’opération</p><p className="font-mono text-xl font-semibold text-gray-900">{vehicle.usage_value != null ? `${vehicle.usage_value.toLocaleString("fr-CA")} h` : "Non renseigné"}</p></div>
+                  <div>
+                    <p className="text-xs text-gray-500">Heures d’opération</p>
+                    <p className="font-mono text-xl font-semibold text-gray-900">
+                      {vehicle.usage_value != null
+                        ? `${vehicle.usage_value.toLocaleString("fr-CA")} h`
+                        : "Non renseigné"}
+                    </p>
+                  </div>
                 </div>
               )}
               {(!isHourBased || vehicle.current_km != null) && !isBattery && (
                 <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3">
                   <Gauge className="text-gray-500" />
-                  <div><p className="text-xs text-gray-500">Kilométrage actuel</p><p className="font-mono text-xl font-semibold text-gray-900">{vehicle.current_km != null ? `${vehicle.current_km.toLocaleString("fr-CA")} km` : "Non renseigné"}</p></div>
+                  <div>
+                    <p className="text-xs text-gray-500">Kilométrage actuel</p>
+                    <p className="font-mono text-xl font-semibold text-gray-900">
+                      {vehicle.current_km != null
+                        ? `${vehicle.current_km.toLocaleString("fr-CA")} km`
+                        : "Non renseigné"}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -386,7 +463,7 @@ export default function VehicleMaintenanceDetail({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Planning personnalisé
+                Intervalles de maintenance
               </h2>
               <p className="mt-1 text-sm text-gray-500">
                 Configurez les intervalles propres à ce véhicule ou outil.
@@ -401,7 +478,7 @@ export default function VehicleMaintenanceDetail({
               }}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
             >
-              <Plus size={16} /> Ajouter une règle
+              <Plus size={16} /> Ajouter
             </button>
           </div>
           {showScheduleForm && (
@@ -410,7 +487,7 @@ export default function VehicleMaintenanceDetail({
               className="mt-5 grid gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 md:grid-cols-4"
             >
               <label className="text-sm font-medium text-gray-700 md:col-span-2">
-                Titre de la règle
+                Maintenance
                 <input
                   required
                   value={draft.title}
@@ -478,7 +555,7 @@ export default function VehicleMaintenanceDetail({
           <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
             <Wrench className="mx-auto text-gray-300" size={36} />
             <h2 className="mt-3 font-semibold text-gray-900">
-              Aucune règle de maintenance
+              Aucune intervalle de maintenance
             </h2>
             <p className="mt-1 text-sm text-gray-500">
               Ajoutez une règle ci-dessus, par exemple 12 000 km ou 12 mois.
@@ -488,7 +565,7 @@ export default function VehicleMaintenanceDetail({
           <section>
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                Règles de maintenance actives
+                Intervalles de maintenance actives
               </h2>
               <p className="mt-1 text-sm text-gray-500">
                 Progression selon le kilométrage et/ou la période.
@@ -628,6 +705,29 @@ export default function VehicleMaintenanceDetail({
               </table>
             </div>
           )}
+        </section>
+        <section className="rounded-2xl border border-red-200 bg-red-50/40 p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-red-900">Supprimer</h2>
+              <p className="mt-1 text-sm text-red-700">
+                Supprimer cet équipement et toutes ses données associées.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={deleteEquipment}
+              disabled={busyId === "equipment-delete"}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            >
+              {busyId === "equipment-delete" ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Trash2 size={16} />
+              )}
+              Supprimer l’équipement
+            </button>
+          </div>
         </section>
       </div>
     </main>
