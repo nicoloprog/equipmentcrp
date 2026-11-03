@@ -65,35 +65,7 @@ export default function PushNotificationSetup() {
     }
   }
 
-  if (!supported || typeof Notification === "undefined") return null;
-
-  if (enabled) {
-    return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-medium text-green-900">Notifications activées</p>
-          <p className="mt-1 text-sm text-green-700">Cet appareil peut recevoir les entretiens prioritaires.</p>
-          {message && <p className="mt-1 text-xs text-green-800">{message}</p>}
-        </div>
-        <button type="button" onClick={async () => {
-          setBusy(true);
-          setMessage(null);
-          try {
-            const response = await fetch("/api/push/test", { method: "POST" });
-            const details = (await response.json().catch(() => null)) as { error?: string } | null;
-            if (!response.ok) throw new Error(details?.error || "Test failed");
-            setMessage("Notification de test envoyée.");
-          } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Test impossible.");
-          } finally {
-            setBusy(false);
-          }
-        }} disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-lg border border-green-300 bg-white px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-100 disabled:opacity-60">
-          {busy && <Loader2 size={16} className="animate-spin" />} Tester
-        </button>
-      </div>
-    );
-  }
+  if (!supported || enabled || typeof Notification === "undefined") return null;
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">

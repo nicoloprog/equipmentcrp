@@ -147,11 +147,13 @@ export default function QuickInspectionPage() {
           `Inspection enregistrée, mais l'anomalie n'a pas pu être créée : ${alertError.message}`,
         );
       } else {
+        void fetch("/api/push/priority", { method: "POST" });
         setMessage("Inspection enregistrée et anomalie ouverte.");
       }
       setResults({});
       setNotes("");
     } else {
+      void fetch("/api/push/priority", { method: "POST" });
       setMessage("Inspection enregistrée.");
       setResults({});
       setNotes("");

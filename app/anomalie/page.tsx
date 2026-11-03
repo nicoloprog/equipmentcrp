@@ -49,6 +49,7 @@ export default function ReportIssuePage() {
     });
     if (error) setMessage(error.message);
     else {
+      if (severity === "high") void fetch("/api/push/priority", { method: "POST" });
       setMessage("Anomalie signalée avec succès.");
       setTitle("");
       setDescription("");

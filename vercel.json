@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/priority-notifications",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
