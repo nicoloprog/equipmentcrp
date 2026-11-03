@@ -46,6 +46,16 @@ export type EquipmentAlert = {
   created_at: string;
 };
 
+export type PushSubscription = {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  last_notified_key: string | null;
+  created_at: string;
+};
+
 export type MaintenancePlan = {
   id: string;
   equipment_id: string;
@@ -113,6 +123,16 @@ export type Database = {
         Row: EquipmentAlert;
         Insert: Omit<EquipmentAlert, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<EquipmentAlert>;
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: PushSubscription;
+        Insert: Omit<PushSubscription, "id" | "created_at" | "last_notified_key"> & {
+          id?: string;
+          created_at?: string;
+          last_notified_key?: string | null;
+        };
+        Update: Partial<PushSubscription>;
         Relationships: [];
       };
     };

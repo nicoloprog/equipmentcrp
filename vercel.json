@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/priority-notifications",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

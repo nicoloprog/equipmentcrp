@@ -11,6 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getMaintenanceProgress } from "@/lib/maintenance/status";
 import type { Equipment, MaintenancePlan } from "@/lib/supabase/types";
+import PushNotificationSetup from "@/app/components/PushNotificationSetup";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,7 @@ export default async function DashboardPage() {
             Suivi des équipements et de leur maintenance.
           </p>
         </header>
+        <PushNotificationSetup />
         {dataError && (
           <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
             Impossible de charger les données: {dataError.message}
