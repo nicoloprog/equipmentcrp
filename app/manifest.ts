@@ -3,13 +3,13 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Maintenance CRP",
-    short_name: "Alerte",
+    short_name: "Maintenance CRP",
     description: "Suivi des équipements, inspections et maintenances du CRP.",
     start_url: "/",
     id: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#ff0000",
+    background_color: "#7c7c7c",
     theme_color: "#4b5563",
     lang: "fr-CA",
     icons: [
