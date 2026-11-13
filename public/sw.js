@@ -1,10 +1,10 @@
-const CACHE_NAME = "maintenance-crp-shell-v5";
+const CACHE_NAME = "maintenance-crp-shell-v6";
 const APP_SHELL = [
   "/",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
-  "/icon-badge.png",
+  "/alarm.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -56,6 +56,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "Entretien prioritaire", {
       body: data.body || "Un entretien prioritaire nécessite votre attention.",
+      icon: "/alarm.png",
       tag: data.tag || "maintenance-prioritaire",
       renotify: true,
       data: { url: data.url || "/maintenance/prioritaires" },
